@@ -49,8 +49,10 @@ class ZplusspiderSpider(scrapy.Spider):
 
     def parse_article(self, response):
         scraped_info = response.meta['article_info']
-
-        scraped_info['article_html'] = 'test' #response.xpath('.').get().strip()
+        if scraped_info['datazplus'] is None:
+            scraped_info['article_html'] = ' '.join(response.xpath('.').get().split())
+        else:
+            scraped_info['article_html'] = None
         return scraped_info
 
     def extract_infos(self, articles):
@@ -65,12 +67,15 @@ class ZplusspiderSpider(scrapy.Spider):
                 'datazplus': article.xpath('./@data-zplus').get(),
                 'href': href,
             }
-            request = self.request(href + '/komplettansicht', self.parse_article)
+            # Check if a nav bar node exists
+            nav_bar = article.xpath("//ul[@class='article-pager']").get()
+            if nav_bar is not None:
+                # Use the easier non-paged version of the site
+                href = href + '/komplettansicht'
+
+            request = self.request(href, self.parse_article)
             request.meta['article_info'] = scraped_info
             yield request
-
-    def clear_html(self, article):
-        article_html
 
 
 

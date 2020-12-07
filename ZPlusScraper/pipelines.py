@@ -26,12 +26,6 @@ class DatabasePipeline(object):
         self.passwd = passwd
         self.host = host
 
-    def process_item(self, item, spider):
-        existing_article = self.get_existing_article(item)
-        if existing_article is None:
-            self.save_article(item)
-        return item
-
     @classmethod
     def from_crawler(cls, crawler):
         db_settings = crawler.settings.getdict("DB_SETTINGS")
@@ -57,13 +51,24 @@ class DatabasePipeline(object):
         print('closing spider')
         self.context.close()
 
+    def process_item(self, item, spider):
+        existing_article = self.get_existing_article(item)
+        if existing_article is None:
+            article_id = self.save_article(item)
+        else:
+            article_id = existing_article['id']
+            self.update_article(item)
+        self.save_scrape_run(item, article_id)
+
+        return item
+
     def get_existing_article(self, article):
         href = article['href']
         if href is None:
             return None
 
         cursor = self.context.cursor(buffered=True)
-        sql_command = "SELECT Id, title FROM articles WHERE href = %s"
+        sql_command = "SELECT id, title FROM articles WHERE href = %s"
         returned_rows = cursor.execute(sql_command, (href,))
         result = None
         if returned_rows is not None:
@@ -79,6 +84,30 @@ class DatabasePipeline(object):
                             VALUES (%s, %s, %s, %s, %s)"""
         str_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute(sql_command, (str_now, str_now, article['title'], article['href'], article['article_html']))
+
+        self.context.commit()
+        row_id = cursor.lastrowid
+        cursor.close()
+        return row_id
+
+    def update_article(self, article):
+        cursor = self.context.cursor(buffered=True)
+
+        sql_command = """UPDATE articles SET last_modified = %s, article_html = %s """
+        str_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute(sql_command, (str_now,  article['article_html']))
+
+        self.context.commit()
+        cursor.close()
+        return None
+
+    def save_scrape_run(self, article, article_id):
+        cursor = self.context.cursor(buffered=True)
+
+        sql_command = """INSERT INTO scrape_run (created, datazplus, article_id) 
+                            VALUES (%s, %s, %s)"""
+        str_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute(sql_command, (str_now, article['datazplus'], article_id))
 
         self.context.commit()
         cursor.close()

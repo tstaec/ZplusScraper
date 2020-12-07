@@ -7,8 +7,8 @@ TABLES = {}
 TABLES['articles'] = (
     "CREATE TABLE `articles` ("
     "  `id` bigint(20) NOT NULL AUTO_INCREMENT,"
-    "  `created` date NOT NULL,"
-    "  `last_modified` date NOT NULL,"
+    "  `created` DATETIME NOT NULL,"
+    "  `last_modified` DATETIME NOT NULL,"
     "  `title` varchar(500) NOT NULL,"
     "  `href` varchar(200) NOT NULL,"
     "  `article_html` MEDIUMTEXT ,"
@@ -18,7 +18,7 @@ TABLES['articles'] = (
 TABLES['scrape_run'] = (
     "CREATE TABLE `scrape_run` ("
     "  `id` bigint(20) NOT NULL AUTO_INCREMENT,"
-    "  `created` date NOT NULL,"
+    "  `created` DATETIME NOT NULL,"
     "  `datazplus` varchar(20),"
     "  `article_id` bigint(20) NOT NULL,"
     "  PRIMARY KEY (`id`),"
