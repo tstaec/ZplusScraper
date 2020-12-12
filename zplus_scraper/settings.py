@@ -7,16 +7,16 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'ZPlusScraper'
+BOT_NAME = 'zplus_scraper'
 
-SPIDER_MODULES = ['ZPlusScraper.spiders']
-NEWSPIDER_MODULE = 'ZPlusScraper.spiders'
+SPIDER_MODULES = ['spiders']
+NEWSPIDER_MODULE = 'spiders'
 
 DB_SETTINGS = {
-    'db': "Zplus_scrape",
-    'user': 'testUser',
+    'db': "zplus_scrape",
+    'user': 'root',
     'passwd': 'testPasswort',
-    'host': '127.0.0.1',
+    'host': '172.17.0.2',
 }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -69,8 +69,8 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'ZPlusScraper.pipelines.ZplusscraperPipeline': 300,
-    'ZPlusScraper.pipelines.DatabasePipeline': 500,
+    'pipelines.ZplusscraperPipeline': 300,
+    'pipelines.DatabasePipeline': 500,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

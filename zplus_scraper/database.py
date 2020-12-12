@@ -10,7 +10,7 @@ TABLES['articles'] = (
     "  `created` DATETIME NOT NULL,"
     "  `last_modified` DATETIME NOT NULL,"
     "  `title` varchar(500) NOT NULL,"
-    "  `href` varchar(200) NOT NULL,"
+    "  `href` varchar(200) NOT NULL UNIQUE,"
     "  `article_html` MEDIUMTEXT ,"
     "  PRIMARY KEY (`id`)"
     ") ENGINE=InnoDB")
@@ -34,7 +34,7 @@ def create_database(context, db_name):
     except mysql.connector.Error as err:
         print(f"Database {db_name} does not exists.")
         if err.errno == errorcode.ER_BAD_DB_ERROR:
-            cursor.execute(f"CREATE DATABASE {db_name} DEFAULT CHARACTER SET 'utf8'")
+            cursor.execute(f"CREATE DATABASE {db_name} DEFAULT CHARACTER SET 'utf8mb4'")
             print(f"Database {db_name} created successfully.")
             context.database = db_name
         else:

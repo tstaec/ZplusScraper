@@ -1,14 +1,23 @@
+import logging
+
 import scrapy
-from scrapy.exceptions import NotConfigured
-import mysql.connector
-
-from ZPlusScraper.database import create_database
 
 
-class ZplusspiderSpider(scrapy.Spider):
+class ZplusSpider(scrapy.Spider):
     name = 'ZplusSpider'
     allowed_domains = ['www.zeit.de']
-    start_urls = ['https://www.zeit.de/index']
+    start_urls = [
+        'https://www.zeit.de/index',
+        'https://www.zeit.de/gesellschaft/index',
+        'https://www.zeit.de/wirtschaft/index',
+        'https://www.zeit.de/kultur/index',
+        'https://www.zeit.de/wissen/index',
+        'https://www.zeit.de/digital/index',
+        'https://www.zeit.de/campus/index'
+    ]
+
+    def __init__(self):
+        logging.getLogger('scrapy').setLevel(logging.INFO)
 
     @staticmethod
     def request(url, callback):
@@ -32,9 +41,7 @@ class ZplusspiderSpider(scrapy.Spider):
         request.cookies['wt_rla'] = '981949533494636%2C11%2C1607156423993'
         request.cookies['zonconsent'] = '2020-12-05T08:41:16.273Z'
 
-        request.headers['User-Agent'] = (
-            'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, '
-            'like Gecko) Chrome/45.0.2454.85 Safari/537.36')
+        request.headers['User-Agent'] = 'ZPlusScraper'
         return request
 
     def start_requests(self):
@@ -49,6 +56,17 @@ class ZplusspiderSpider(scrapy.Spider):
 
     def parse_article(self, response):
         scraped_info = response.meta['article_info']
+
+        # Check if a nav bar node exists
+        nav_bar = response.xpath("//ul[@class='article-pager']").get()
+
+        if nav_bar is not None:
+            # Use the easier non-paged version of the site
+            href = scraped_info['href'] + '/komplettansicht'
+            request = self.request(href, self.parse_article)
+            request.meta['article_info'] = scraped_info
+            return request
+
         if scraped_info['datazplus'] is None:
             scraped_info['article_html'] = ' '.join(response.xpath('.').get().split())
         else:
@@ -67,11 +85,6 @@ class ZplusspiderSpider(scrapy.Spider):
                 'datazplus': article.xpath('./@data-zplus').get(),
                 'href': href,
             }
-            # Check if a nav bar node exists
-            nav_bar = article.xpath("//ul[@class='article-pager']").get()
-            if nav_bar is not None:
-                # Use the easier non-paged version of the site
-                href = href + '/komplettansicht'
 
             request = self.request(href, self.parse_article)
             request.meta['article_info'] = scraped_info

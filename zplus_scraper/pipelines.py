@@ -1,16 +1,9 @@
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 from datetime import datetime
 
 import mysql
 from scrapy.exceptions import NotConfigured
 
-# useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
-
-from ZPlusScraper.database import create_database
+from database import create_database
 
 
 class ZplusscraperPipeline:
@@ -30,7 +23,7 @@ class DatabasePipeline(object):
     def from_crawler(cls, crawler):
         db_settings = crawler.settings.getdict("DB_SETTINGS")
         if not db_settings:  # if we don't define db config in settings
-            raise NotConfigured  # then reaise error
+            raise NotConfigured  # then raise error
         db = db_settings['db']
         user = db_settings['user']
         passwd = db_settings['passwd']
@@ -43,7 +36,7 @@ class DatabasePipeline(object):
                                             user=self.user,
                                             passwd=self.passwd,
                                             host=self.host,
-                                            charset='utf8',
+                                            charset='utf8mb4',
                                             use_unicode=True)
         create_database(self.context, self.db)
 
@@ -56,8 +49,9 @@ class DatabasePipeline(object):
         if existing_article is None:
             article_id = self.save_article(item)
         else:
-            article_id = existing_article['id']
-            self.update_article(item)
+            article_id = existing_article[0]
+            if item['datazplus'] is not None and item['article_html'] is not None:
+                self.update_article(item)
         self.save_scrape_run(item, article_id)
 
         return item
@@ -70,10 +64,8 @@ class DatabasePipeline(object):
         cursor = self.context.cursor(buffered=True)
         sql_command = "SELECT id, title FROM articles WHERE href = %s"
         returned_rows = cursor.execute(sql_command, (href,))
-        result = None
-        if returned_rows is not None:
-            result = returned_rows.fetchone()
 
+        result = cursor.fetchone()
         cursor.close()
         return result
 
