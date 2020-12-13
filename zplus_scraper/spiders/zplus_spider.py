@@ -85,7 +85,7 @@ class ZplusSpider(scrapy.Spider):
                 'datazplus': article.xpath('./@data-zplus').get(),
                 'href': href,
             }
-
+            #todo: only load article if datazplus ist null
             request = self.request(href, self.parse_article)
             request.meta['article_info'] = scraped_info
             yield request
