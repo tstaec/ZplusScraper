@@ -13,7 +13,8 @@ class ZplusSpider(scrapy.Spider):
         'https://www.zeit.de/kultur/index',
         'https://www.zeit.de/wissen/index',
         'https://www.zeit.de/digital/index',
-        'https://www.zeit.de/campus/index'
+        'https://www.zeit.de/campus/index',
+        'https://www.zeit.de/zeit-magazin/index'
     ]
 
     def __init__(self):
